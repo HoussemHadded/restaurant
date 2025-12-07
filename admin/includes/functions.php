@@ -8,10 +8,10 @@
 require_once __DIR__ . '/db.php';
 
 /**
- * Formate un montant en euros
+ * Formate un montant en dinars tunisiens
  */
 function formatPrice($price) {
-    return number_format((float)$price, 2, ',', ' ') . ' €';
+    return number_format((float)$price, 2, ',', ' ') . ' DT';
 }
 
 /**
