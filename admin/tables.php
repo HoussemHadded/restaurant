@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && ($_POST[
     $numero = intval($_POST['numero'] ?? 0);
     $capacite = intval($_POST['capacite'] ?? 0);
     $statut = trim($_POST['statut'] ?? 'libre');
+    $description = trim($_POST['description'] ?? '');
     $id = $_POST['action'] === 'edit' ? intval($_POST['id'] ?? 0) : 0;
     
     if ($numero <= 0 || $capacite <= 0) {
@@ -47,12 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && ($_POST[
     } else {
         try {
             if ($_POST['action'] === 'add') {
-                $stmt = $pdo->prepare('INSERT INTO table_restaurant (numero, capacite, statut) VALUES (:numero, :capacite, :statut)');
-                $stmt->execute(['numero' => $numero, 'capacite' => $capacite, 'statut' => $statut]);
+                $stmt = $pdo->prepare('INSERT INTO table_restaurant (numero, capacite, statut, description) VALUES (:numero, :capacite, :statut, :description)');
+                $stmt->execute(['numero' => $numero, 'capacite' => $capacite, 'statut' => $statut, 'description' => $description]);
                 $message = 'Table ajoutée avec succès.';
             } else {
-                $stmt = $pdo->prepare('UPDATE table_restaurant SET numero = :numero, capacite = :capacite, statut = :statut WHERE id = :id');
-                $stmt->execute(['id' => $id, 'numero' => $numero, 'capacite' => $capacite, 'statut' => $statut]);
+                $stmt = $pdo->prepare('UPDATE table_restaurant SET numero = :numero, capacite = :capacite, statut = :statut, description = :description WHERE id = :id');
+                $stmt->execute(['id' => $id, 'numero' => $numero, 'capacite' => $capacite, 'statut' => $statut, 'description' => $description]);
                 $message = 'Table modifiée avec succès.';
             }
         } catch (PDOException $e) {
@@ -118,6 +119,11 @@ require_once __DIR__ . '/includes/header.php';
                         <option value="reservee" <?= ($editTable['statut'] ?? '') === 'reservee' ? 'selected' : '' ?>>Réservée</option>
                     </select>
                 </div>
+
+                <div class="form-group" style="flex: 1 1 100%;">
+                    <label>Description</label>
+                    <textarea name="description" rows="3" placeholder="Enter description (optional)"><?= e($editTable['description'] ?? '') ?></textarea>
+                </div>
             </div>
             
             <div class="form-actions">
@@ -169,6 +175,10 @@ require_once __DIR__ . '/includes/header.php';
                                                 <option value="reservee" <?= $table['statut'] === 'reservee' ? 'selected' : '' ?>>Réservée</option>
                                             </select>
                                         </form>
+                                        <button type="button"
+                                                class="btn-icon"
+                                                onclick="openDescriptionModal(<?= $table['id'] ?>, 'Table <?= e($table['numero']) ?>', '<?= e(addslashes($table['description'] ?? 'No description')) ?>')"
+                                                title="Info">ℹ️</button>
                                         <a href="?edit=<?= $table['id'] ?>" class="btn-icon" title="Modifier">✏️</a>
                                     </div>
                                 </td>
@@ -182,4 +192,37 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
+<!-- Description Modal -->
+<div id="descriptionModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeDescriptionModal()">&times;</span>
+        <h3 id="modalTitle"></h3>
+        <p id="modalDescription" style="white-space:pre-wrap;"></p>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.4);
+    display:flex; justify-content:center; align-items:center;
+    z-index:10000;
+}
+.modal-content {
+    background:#fff; padding:20px; border-radius:8px; width:400px;
+}
+.modal-close { float:right; cursor:pointer; font-size:22px; }
+</style>
+
+<script>
+function openDescriptionModal(id, title, description) {
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalDescription").innerText = description;
+    document.getElementById("descriptionModal").style.display = "flex";
+}
+function closeDescriptionModal() {
+    document.getElementById("descriptionModal").style.display = "none";
+}
+</script>
 
